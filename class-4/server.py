@@ -6,6 +6,6 @@ RABBIT_MQ_SERVER = "localhost"
 
 # establish connection with rabbit mq
 credentials = pika.PlainCredentials(CONFIG['RABBIT_USER'], CONFIG['RABBIT_PASSWORD'])
-parameters = pika.ConnectionParameters(RABBIT_MQ_SERVER, credentials=credentials)
+parameters = pika.ConnectionParameters(RABBIT_MQ_SERVER, credentials=credentials,heartbeat=30)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
