@@ -2,7 +2,7 @@ import time
 
 from server import channel
 
-logs_files = open("/home/virus/Documents/GitHub/python/class-4/assets/web-server-nginx.log", "r")
+logs_files = open("class-4/assets/web-server-nginx.log", "r")
 
 
 QUEUES = [

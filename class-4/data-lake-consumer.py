@@ -5,6 +5,8 @@ import re
 from ip2geotools.databases.noncommercial import DbIpCity
 from pycountry import countries
 from datetime import datetime, timedelta
+import urllib.parse
+from http.client import responses
 
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.spec import Basic
@@ -18,7 +20,7 @@ from main import CreateEngine
 
 
 
-session = CreateEngine()
+con = CreateEngine()
 
 
 
@@ -38,8 +40,8 @@ def process_msg_data_lake(chan: BlockingChannel, method: Basic.Deliver, properti
     print(log)
 
     row_logs = RowLog(hash_body=hash_body,timestamp=datetime,log=log)
-    session.add(row_logs)
-    session.commit()
+    con.add(row_logs)
+    con.commit()
     print("Data inserted successfully")
 
     print(f"[{method.routing_key}] event consumed from exchange `{method.exchange}` body `{body}`")
@@ -55,6 +57,8 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
                            r"(?P<version>\S{1,10})\" (?P<status>\d{3}) (?P<size>\d+) -")
     match = re.search(regex,body)
     if match:
+        list_matches = []
+
         timestamp = match.group("timestamp")
         format = "%d/%b/%Y:%H:%M:%S"
         date_time = datetime.strptime(timestamp, format)
@@ -62,7 +66,7 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
         year = date_time.strftime("%Y")
         month = date_time.strftime("%m")
         day = date_time.strftime("%d")
-        day_of_weak = date_time.strftime("%A")
+        day_of_week = date_time.strftime("%A")
         time = date_time.strftime("%H:%M:%S")
         ip_matches = match.group("ip")
         res = DbIpCity.get(ip_matches, api_key="free")
@@ -70,32 +74,36 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
         city = str.upper(res.city)
         session = match.group("session")
         user = match.group("user")
+        is_email = "True" if len(re.findall(
+            r'[\w\.-]+@[\w\.-]+', user)) > 0 else "False"
+        email_domain = re.findall(
+            r'((?<=@)[^.]+(?=\.)+.+)', user) if is_email == "True" else "None"
         rest_method = match.group("method")
         url = match.group("url")
-        
+        schema = urllib.parse.urlsplit(url).scheme
+        host = urllib.parse.urlsplit(url).hostname
+
         version = match.group("version")
         status = match.group("status")
-        size = match.group("size")
-
-        print(timestamp)
-        print(date_time)
-        print(year)
-        print(month)
-        print(day)
-        print(time)
-        print(day_of_weak)
-        print(country)
-        print(city)
-        print(session)
-        print(user)
-        print(rest_method)
-        print(url)
-        print(version)
-        print(status)
-        print(size)
+        status_verbose = responses[int(status)]
+        
+        size_bytes = match.group("size")
+        size_kilo_bytes = round((int(size_bytes) / 1024),2)
+        size_mega_bytes = round((int(size_bytes) / 1024 / 1024),2)
 
 
+        list_matches.append([timestamp, year, month, day, day_of_week, time, ip_matches,
+                        country, city, session, user, is_email, email_domain, rest_method,url,schema,host,version,status,status_verbose,size_bytes,size_kilo_bytes,size_mega_bytes])
+
+        print(list_matches)
         #clean_logs = CleanLog(ip=ip,timestamp=timestamp,utc=utc,method=method,url=url,version=version,status=status,size=size)
+
+        clean_logs = CleanLog(timestamp=timestamp,year=year,month=month,day=day,day_of_week=day_of_week,time=time,ip=ip_matches,country=country,city=city,session=session,user=user,is_email=is_email,email_domain=email_domain,rest_method=rest_method,url=url,schema=schema,host=host,status=status,status_verbose=status_verbose,size_bytes=size_bytes,size_kilo_bytes=size_kilo_bytes,size_mega_bytes=size_mega_bytes)
+        con.add(clean_logs)
+        con.commit()
+        print("Data inserted successfully")
+
+        print(f"[{method.routing_key}] event consumed from exchange `{method.exchange}` body `{body}`")
 
 
 
