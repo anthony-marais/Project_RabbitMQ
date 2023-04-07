@@ -29,6 +29,16 @@ services:
       MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
     ports:
       - '3366:3306'
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_USER: "${MYSQL_USER}"
+      PMA_PASSWORD: "${MYSQL_PASSWORD}"
+    ports:
+      - '8080:80'
 
 volumes:
   rabbitmq:
