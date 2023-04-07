@@ -1,5 +1,6 @@
 import time
 import re
+import hashlib
 
 from ip2geotools.databases.noncommercial import DbIpCity
 from pycountry import countries
@@ -36,6 +37,12 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
     match = match_regex(regex, body)
 
     if match != None:
+
+        def get_id(body):
+            id = hashlib.md5(body.encode()).hexdigest()
+            return id
+
+
 
         def get_timestamp(match):
             timestamp = match.group("timestamp")
@@ -154,7 +161,7 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
 
         if get_user(match) != None or get_session(match) != None:
             
-            clean_logs = CleanLog(timestamp=get_timestamp(match), year=get_year(match), month=get_month(match), day=get_day(match), day_of_week=get_day_of_week(match), time=get_time(match), ip=get_ip(match), country=get_country(get_ip(match)), city=get_city(get_ip(match)), session=get_session(match), user=get_user(match), is_email=get_is_email(get_user(match)), email_domain=get_email_domain(get_user(match)),
+            clean_logs = CleanLog(id=get_id(body),timestamp=get_timestamp(match), year=get_year(match), month=get_month(match), day=get_day(match), day_of_week=get_day_of_week(match), time=get_time(match), ip=get_ip(match), country=get_country(get_ip(match)), city=get_city(get_ip(match)), session=get_session(match), user=get_user(match), is_email=get_is_email(get_user(match)), email_domain=get_email_domain(get_user(match)),
                                 rest_method=get_rest_method(match), url=get_url(match), schema=get_schema(get_url(match)), host=get_host(get_url(match)), status=get_status(match), status_verbose=get_status_verbose(match), size_bytes=get_size(match), size_kilo_bytes=get_size_kb(get_size(match)), size_mega_bytes=get_size_mb(get_size(match)))
             con.add(clean_logs)
             con.commit()
