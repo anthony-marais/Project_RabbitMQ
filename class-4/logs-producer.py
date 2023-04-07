@@ -29,7 +29,8 @@ for queue in QUEUES:
 # publish event
 for line in logs_files:
     #channel.basic_publish(exchange=EXCHANGE_NAME, routing_key=QUEUE_LOGS, body=line)
-    #time.sleep(0.05)
+    #time.sleep(5)
+    time.sleep(0.05)
     channel.basic_publish(exchange=EXCHANGE_NAME, routing_key="logs", body=line)
 
 

@@ -32,6 +32,8 @@ def process_msg_data_lake(chan: BlockingChannel, method: Basic.Deliver, properti
 
     def get_hash_body(body):
         hash_body = hashlib.md5(body.encode()).hexdigest()
+        
+        
         return hash_body    
     
     def get_match(regex, body):
@@ -43,9 +45,15 @@ def process_msg_data_lake(chan: BlockingChannel, method: Basic.Deliver, properti
 
     def get_user(match):
         user = match.group("user")
+        if user == "-":
+            return None
         return user
+    
     def get_session(match):
         session = match.group("session")
+        
+        if session == "-":
+            return None
         return session
 
     if get_match(regex, body) != None:

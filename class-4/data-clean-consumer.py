@@ -35,7 +35,7 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
 
     match = match_regex(regex, body)
 
-    if match:
+    if match != None:
 
         def get_timestamp(match):
             timestamp = match.group("timestamp")
@@ -97,19 +97,18 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
             else:
                 return user
 
+        def get_email_domain(user):
+            if len(re.findall(r'((?<=@)[^.]+(?=\.)+.+)', user)) > 0:
+                email_domain = re.findall(r'((?<=@)[^.]+(?=\.)+.+)', user)
+                return email_domain
+            else:
+                return None
+            
         def get_is_email(user):
-            if "@" in user:
+            if get_email_domain(user) != None:
                 return "True"
             else:
                 return "False"
-
-        def get_email_domain(user):
-            if get_is_email(user) == "True":
-                match_email_domain = re.findall(
-                    r'((?<=@)[^.]+(?=\.)+.+)', user)
-                return match_email_domain
-            else:
-                return "None"
 
         def get_rest_method(match):
             rest_method = match.group("method")
@@ -138,7 +137,7 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
         def get_status_verbose(match):
             status = match.group("status")
             status_verbose = responses[int(status)] if int(
-                status) in responses else "None"
+                status) in responses else None
             return status_verbose
 
         def get_size(match):
@@ -153,7 +152,7 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
             size_mb = int(size) / 1024 / 1024
             return size_mb
 
-        if get_user(match) != "None" or get_session(match) != "None":
+        if get_user(match) != None or get_session(match) != None:
             
             clean_logs = CleanLog(timestamp=get_timestamp(match), year=get_year(match), month=get_month(match), day=get_day(match), day_of_week=get_day_of_week(match), time=get_time(match), ip=get_ip(match), country=get_country(get_ip(match)), city=get_city(get_ip(match)), session=get_session(match), user=get_user(match), is_email=get_is_email(get_user(match)), email_domain=get_email_domain(get_user(match)),
                                 rest_method=get_rest_method(match), url=get_url(match), schema=get_schema(get_url(match)), host=get_host(get_url(match)), status=get_status(match), status_verbose=get_status_verbose(match), size_bytes=get_size(match), size_kilo_bytes=get_size_kb(get_size(match)), size_mega_bytes=get_size_mb(get_size(match)))
@@ -167,7 +166,8 @@ def process_msg_data_clean(chan: BlockingChannel, method: Basic.Deliver, propert
 
         else:
             print("Message ignored")
-
+    else:
+        print("Message ignored")
 
 channel.basic_consume(queue="queue-data-clean",
                       on_message_callback=process_msg_data_clean, auto_ack=True,consumer_tag="consumer-data-clean")

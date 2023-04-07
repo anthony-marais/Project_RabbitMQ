@@ -39,7 +39,7 @@ class CleanLog(Base):
 class RowLog(Base):
     __tablename__ = "row-log"
 
-    id = Column(Integer, primary_key=True, autoincrement=True,nullable=False)
-    hash_body = Column(String(255), nullable=False)
+   # id = Column(Integer, primary_key=True, autoincrement=True,nullable=False)
+    hash_body = Column(String(255),primary_key=True, nullable=False)
     timestamp = Column(String(255), nullable=False)
     log = Column(Text, nullable=False)

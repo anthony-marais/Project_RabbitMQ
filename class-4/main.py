@@ -11,9 +11,9 @@ CONFIG = dotenv_values("class-4/.env")
 
 
 def CreateEngine():
-    engine = create_engine("mysql+mysqlconnector://%s:%s@localhost:3366/%s" %
+    engine = create_engine("mysql+mysqlconnector://%s:%s@%s:%s/%s" %
                            (CONFIG['MYSQL_USER'],
-                            CONFIG['MYSQL_PASSWORD'], CONFIG['MYSQL_DATABASE'])
+                            CONFIG['MYSQL_PASSWORD'], CONFIG['HOST'],CONFIG['PORT'],CONFIG['MYSQL_DATABASE'])
                            )
 
 
